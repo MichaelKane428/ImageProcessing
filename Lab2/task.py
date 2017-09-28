@@ -1,5 +1,26 @@
 #!python2
 
+######################################################
+#
+#	(C) Michael Kane 2017
+#
+#	Student No: C14402048
+#	Course: DT211C
+# 	Date: 22/09/2017
+#
+#	Title: Lab 2 Task.
+#
+# 	Introduction:
+#	
+#	Describe the algorithm here
+#	Preferably use a systematic approach
+#	e.g. step-by-step
+#	or pseudo-code
+#	Give an overview
+#	Comment on experiments
+# 	Use References (Harvard Referencing Standard) - no Web Links
+
+
 import numpy as np
 import cv2
 ##from matplotlib import pyplot as plt

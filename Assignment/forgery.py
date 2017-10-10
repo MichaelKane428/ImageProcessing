@@ -47,7 +47,8 @@ class forgery():
 		#print("Please Select a Signature you wish to forge:")
 		#file = easygui.fileopenbox()
 		#image = cv2.imread(file)
-		image = cv2.imread("Boss.bmp")
+		#image = cv2.imread("Boss.bmp")
+		image = cv2.imread("redSignature.png")
 		#image = cv2.imread("Trump.jpg")
 		form = cv2.imread("form.png")
 		
@@ -76,29 +77,32 @@ class forgery():
 		grayScaleMask = cv2.adaptiveThreshold(grayScale, maxValue = 255,
 		adaptiveMethod = cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
 		thresholdType = cv2.THRESH_BINARY,
-		blockSize = 5,C = 15)
+		blockSize = 5,C = 10)
 		
 		# https://stackoverflow.com/questions/44383209/how-to-detect-edge-and-crop-an-image-in-python
 		# Reference this correctly at top of page.
 		points = np.argwhere(grayScaleMask==0)
 		points = np.fliplr(points)
 		x, y, width, height = cv2.boundingRect(points)
-		x, y, width, height = x-10, y-10, width+20, height+20
+		x, y, width, height = x-50, y-50, width+100, height+70
 		croppedColorImage = image[y:y+height,x:x+width]
 		croppedGrayScaleImage = grayScaleMask[y:y+height,x:x+width]
 		
 		
 		reverseMask = cv2.bitwise_not(croppedGrayScaleImage)
 		ROI1 = cv2.bitwise_and(croppedColorImage,croppedColorImage,mask=reverseMask)
+		
 		reverseMask2 = cv2.bitwise_not(reverseMask)
 		
-		height, width, channels = croppedColorImage.shape
+		height, width = croppedGrayScaleImage.shape
 		form = cv2.resize(form,(width,height))
 		ROI2 = cv2.bitwise_and(form,form,mask=reverseMask2)
-
-		ROI = ROI1 + ROI2
 		
-		return ROI
+		forged_signature = ROI1 + ROI2
+		
+		
+		cv2.imwrite('forgedSignature.jpg', forged_signature)
+		return forged_signature
 
 if __name__ == "__main__":
 	myBool = True

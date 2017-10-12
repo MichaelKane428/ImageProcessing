@@ -39,14 +39,9 @@ thresholdType = cv2.THRESH_BINARY,
 blockSize = 9,C = 20)
 B3 = 255-B3
 
-shape = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(2,2))
-ROI = cv2.bitwise_or(B2,B3)
-eroded_mask = cv2.erode(ROI,shape)
-boundary = ROI - eroded_mask
 
-#ROI = cv2.bitwise_and(I,I,mask=boundary)
-#TEST = cv2.morphologyEx(NEWB,cv2.MORPH_CLOSE,shape)
-#ROI = cv2.morphologyEx(TEST,cv2.MORPH_OPEN,shape)
+ROI = cv2.bitwise_or(B2, B3)
+
 cv2.imshow("NEW",ROI)
 key = cv2.waitKey(0)
 

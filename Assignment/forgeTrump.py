@@ -89,8 +89,8 @@ class forgery():
 		
 		#Opening an image from a file:
 		print("Please Select a Signature you wish to forge:")
-		file = easygui.fileopenbox()
-		image = cv2.imread(file)
+		#file = easygui.fileopenbox()
+		image = cv2.imread("Trump.jpg")
 		forged_image = self.forgeSignature(image)
 
 		while True:
@@ -119,20 +119,16 @@ class forgery():
 		
 		# Create a grayscale mask for the signature. 
 		grayScale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-		grayScaleHistogram = cv2.equalizeHist(grayScale)
-		grayScaleMask = cv2.adaptiveThreshold(grayScaleHistogram, maxValue = 255,
-		adaptiveMethod = cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-		thresholdType = cv2.THRESH_BINARY,
-		blockSize = 11,C = 30)
-		
+		threshold = cv2.threshold(grayScale, 218, 255, cv2.THRESH_BINARY)[1]
+		threshold = cv2.bitwise_not(threshold)
 		# The next six lines of code are from reference Number 1.
 		# Crop the area where the signature is located. 
-		points = np.argwhere(grayScaleMask==0)
+		points = np.argwhere(threshold==0)
 		points = np.fliplr(points)
 		x, y, width, height = cv2.boundingRect(points)
-		x, y, width, height = x-50, y-50, width+100, height+70
+		x, y, width, height = x, y, width, height
 		croppedColorImage = image[y:y+height,x:x+width]
-		croppedGrayScaleImage = grayScaleMask[y:y+height,x:x+width]
+		croppedGrayScaleImage = grayScale[y:y+height,x:x+width]
 		
 		# Extracted signature.
 		reverseSignature = cv2.bitwise_not(croppedGrayScaleImage)
@@ -149,7 +145,7 @@ class forgery():
 		
 		# Create an image of the signature.
 		cv2.imwrite('forgedSignature.jpg', forged_signature)
-		return forged_signature
+		return threshold
 
 if __name__ == "__main__":
 	forged_signature = forgery()

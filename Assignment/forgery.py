@@ -9,27 +9,27 @@
 	Title: Master Forgery Assignment.
 
 	Introduction:
-	1. Open image Wartime.jpg;
-	2. View its histogram alongside the image;
-	3. Use histogram equalisation to improve its contrast;
-	4. View the new histogram alongside the new image.
-	Advanced Task:
-	Try this on a poor quality colour image.
+	1. Clean Boss.bmp to give a more convincing and usable signature for your forged documents. 
+    2. Make sure the system cleans the whole picture and not just the signature.
+    Challenge : Find, isolate and clean the signature pictured in 'Trump.jpg'
 
 	Step-by-step:
-	1. Open an image of your choice.
+	1. Open a signature of your choice.
 	2. Convert the image to its grayscale version.
-	3. Unravel the image from its matrix and get the pixel values using G.ravel() where G is the grayscale image.
-	4. Plot the Histogram using plot.hist(Values,bins=256,range=[0,256]).
-	5. Equalise the Histogram using H = cv2.equalizeHist(G) where G is the grayscale image.
-	6. Show the Hisograms and the images.
+	3. Find the area where the signature is located using.
+	4. 
+	5. 
+	6. 
 	
 	Give an overview:
 	
 	Comment on experiments:
-	For colour images there seems to be some trouble equalizing the Histograms, will do more research into this.
 	
-	Use References: 
+	
+	References: 
+	Convert References to harvard style.
+	1. https://stackoverflow.com/questions/44383209/how-to-detect-edge-and-crop-an-image-in-python
+	2. https://stackoverflow.com/questions/4337902/how-to-fill-opencv-image-with-one-solid-color
 	
 """
 
@@ -44,19 +44,10 @@ import easygui
 class forgery():
 	def getImage(self):
 		#Opening an image from a file:
-		#print("Please Select a Signature you wish to forge:")
-		#file = easygui.fileopenbox()
-		#image = cv2.imread(file)
-		#image = cv2.imread("Boss.bmp")
-		image = cv2.imread("redSignature.png")
-		#image = cv2.imread("Trump.jpg")
-		form = cv2.imread("form.png")
-		
-		#print("Please Select an image to place the signature on:")
-		#file2 = easygui.fileopenbox()
-		#form = cv2.imread(file2)
-		forged_image = self.signature(image, form)
-		
+		print("Please Select a Signature you wish to forge:")
+		file = easygui.fileopenbox()
+		image = cv2.imread(file)
+		forged_image = self.signature(image)
 
 		while True:
 			# Showing an image on the screen (OpenCV):
@@ -71,16 +62,16 @@ class forgery():
 			if key == ord("q"):
 				break
 		
-	def signature(self, image, form):
+	def signature(self, image):
+		# Create a grayscale mask for the signature. 
 		grayScale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-		
 		grayScaleMask = cv2.adaptiveThreshold(grayScale, maxValue = 255,
 		adaptiveMethod = cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
 		thresholdType = cv2.THRESH_BINARY,
-		blockSize = 5,C = 10)
+		blockSize = 11,C = 15)
 		
-		# https://stackoverflow.com/questions/44383209/how-to-detect-edge-and-crop-an-image-in-python
-		# Reference this correctly at top of page.
+		# The next six lines of code are from reference Number 1.
+		# Crop the area where the signature is located. 
 		points = np.argwhere(grayScaleMask==0)
 		points = np.fliplr(points)
 		x, y, width, height = cv2.boundingRect(points)
@@ -88,19 +79,20 @@ class forgery():
 		croppedColorImage = image[y:y+height,x:x+width]
 		croppedGrayScaleImage = grayScaleMask[y:y+height,x:x+width]
 		
+		# Extracted signature.
+		reverseSignature = cv2.bitwise_not(croppedGrayScaleImage)
+		regionOfInterestOne = cv2.bitwise_and(croppedColorImage,croppedColorImage,mask=reverseSignature)
 		
-		reverseMask = cv2.bitwise_not(croppedGrayScaleImage)
-		ROI1 = cv2.bitwise_and(croppedColorImage,croppedColorImage,mask=reverseMask)
-		
-		reverseMask2 = cv2.bitwise_not(reverseMask)
-		
+		# Line 101 and 102 are referenced by reference Number 2.
+		# Apply the extracted Signature to the background.
+		reverseBackground = cv2.bitwise_not(reverseSignature)
 		height, width = croppedGrayScaleImage.shape
-		form = cv2.resize(form,(width,height))
-		ROI2 = cv2.bitwise_and(form,form,mask=reverseMask2)
+		background = np.zeros((height, width, 3), np.uint8)
+		background[:] = (255,255,255)
+		regionOfInterestTwo = cv2.bitwise_and(background,background,mask=reverseBackground)
+		forged_signature = regionOfInterestOne + regionOfInterestTwo
 		
-		forged_signature = ROI1 + ROI2
-		
-		
+		# Create an image of the signature.
 		cv2.imwrite('forgedSignature.jpg', forged_signature)
 		return forged_signature
 

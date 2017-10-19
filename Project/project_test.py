@@ -1,6 +1,6 @@
 ################################################################################################################################
-#	Name:		Elizabeth Govan
-#	Student 	Number: C14307346
+#	Name:		Michael Kane
+#	Student 	Number: C14402048
 #	Course:		DT211C/4
 #	StartDate:	28/08/17
 #	FinishDate: 
@@ -23,45 +23,76 @@ from matplotlib import pyplot as plt
 from matplotlib import image as image
 import easygui
 
-f = easygui.fileopenbox()
-I = cv2.imread(f)
 
-# RED
-RangeLower = (0,0,150)
-RangeUpper = (100,100,255)
-B2 = cv2.inRange(I, RangeLower, RangeUpper)
+class peakFlow():
+	"""
+	Purpose of function:
+	Allow portablity of the peakFlow code
+	
+	Example Function:
+	instance = peakFlow()
+	
+	Args:
+		None
+	return:
+		None
+	"""
+	def findRedMask(self, image):
+		# RED
+		RangeLower = (0,0,150)
+		RangeUpper = (100,100,255)
+		redMask = cv2.inRange(image, RangeLower, RangeUpper)
+		return redMask
+		
+	def findBlackMask(self, image):
+		# BLACk
+		greyScaleMask = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+		
+		blackMask = cv2.adaptiveThreshold(greyScaleMask, maxValue = 255,
+		adaptiveMethod = cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+		thresholdType = cv2.THRESH_BINARY,
+		blockSize = 9,C = 20)
+		
+		blackMask = 255-blackMask
+		
+		return blackMask, greyScaleMask
+	
+	def getImage(self):
+		"""
+		Purpose of function:
+		Allow a user to select an image.
+		
+		Example Function:
+		instance.getImage()
+		
+		Args:
+			None
+		return:
+			None
+		"""
+		try:
+			#Opening an image from a file:
+			print("Please Select a image:")
+			file = easygui.fileopenbox()
+			image = cv2.imread(file)
+			
+			redMask = self.findRedMask(image)
 
-# BLACk
-G = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
-B3 = cv2.adaptiveThreshold(G, maxValue = 255,
-adaptiveMethod = cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-thresholdType = cv2.THRESH_BINARY,
-blockSize = 9,C = 20)
-B3 = 255-B3
+			blackMask, greyScaleMask = self.findBlackMask(image)
+			
+			ROI = cv2.bitwise_or(redMask, blackMask)
 
+		except:
+			print("User failed to select an image.")
+		while True:
+			# Showing an image on the screen (OpenCV):
+			cv2.imshow("Reading", ROI)
+			key = cv2.waitKey(0)
 
-ROI = cv2.bitwise_or(B2, B3)
+			# if the 'q' key is pressed, quit:
+			if key == ord("q"):
+				break
 
-cv2.imshow("NEW",ROI)
-key = cv2.waitKey(0)
-
-#YELLOW
-# RangeLower = (0,90,100)
-# RangeUpper = (255,200,200)
-#RangeLower = (0,90,100)
-#RangeUpper = (45,150,255)
-#B1 = cv2.inRange(I, RangeLower, RangeUpper)
-# cv2.imwrite("bwPeakFlow.jpg",B1)
-
-#cv2.imshow("image",B1)
-#key = cv2.waitKey(0) 
-
-# B = cv2.bitwise_or(B1,B2)
-# cv2.imshow("image",B)
-# key = cv2.waitKey(0)
-# ROI = cv2.bitwise_and(I,I,mask=B)
-#ROI = 255-ROI
-# shape = cv2.getStructuringElement(cv2.MORPH_RECT,(2,2))
-# NewMask = cv2.morphologyEx(ROI,cv2.MORPH_CLOSE,shape)
-# cv2.imshow("image",NewMask)
-# key = cv2.waitKey(0)
+if __name__ == "__main__":
+	reading = peakFlow()
+	reading.getImage()

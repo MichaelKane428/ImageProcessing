@@ -9,38 +9,38 @@
 	Title: Master Forgery Assignment.
 
 	Introduction:
-	1. Clean Boss.bmp to give a more convincing and usable signature for your forged documents. 
-    2. Make sure the system cleans the whole picture and not just the signature.
-    Challenge : Find, isolate and clean the signature pictured in 'Trump.jpg'
+	Challenge : Find, isolate and clean the signature pictured in 'Trump.jpg'
 
 	Step-by-step:
 	1. Open a signature of your choice.
 	2. Convert the image to its grayscale version.
-	3. Find the area where the signature is located using np.argwhere(grayScaleMask==0). 
-	4. Plot the points of the returned value of np.argwhere using points = np.fliplr(points) then x, y, width, height = cv2.boundingRect(points)
-	5. Crop both the grayscale and original image.
-	6. Get the ROI of the original image by getting the reverse mask of it then anding itwith itself.
-	7. Create a blank background image by getting to shape of the original image, then use np.zeros((height, width, 3), np.uint8) to create the image
-	8. Change the background to full white then add the background and ROI together.
-	9. Write the image to an image file, return the image and display it.
+	3. Equalise the histogram.
+	4. Apply the open and close functions to the image.
+	5. Call the cropImage function.
+	6. Find the area where the signature is located using np.argwhere(grayScaleMask==0). This selects the black pixels in the image. 
+	7. Plot the points of the returned value of np.argwhere using points = np.fliplr(points) then x, y, width, height = cv2.boundingRect(points)
+	8. Crop both the grayscale and original image.
+	9. Get the ROI of the original image by getting the reverse mask of it then anding itwith itself.
+	10. Create a grayScale mask of the new cropped grayscale image.
+	11. Try to isolate the signature further using:
+		shape = cv2.getStructuringElement(cv2.MORPH_RECT,(80,80))
+		openMask = cv2.morphologyEx(grayScaleMask,cv2.MORPH_OPEN,shape)
+		closedMask = cv2.morphologyEx(openMask,cv2.MORPH_CLOSE,shape)
+		closedMask = cv2.bitwise_not(closedMask)
+		regionOfInterestOne = cv2.bitwise_and(croppedColorImage,croppedColorImage,mask=closedMask)
+	12. Create a blank background image by getting to shape of the original image, then use np.zeros((height, width, 3), np.uint8) to create the image
+	13. Change the background to full white then add the background and ROI together.
+	14. Write the image to an image file, return the image and display it.
 	
 	Give an overview:
-	The purpose of this application is to allow a user to input an image of a signature, 
-	and recieve an image back with the signature isolated and background completely white.
+	The purpose of this application is to allow a user to isolate Donald Trumps signature, 
+	then use it in what ever way the like.
 	
 	Comment on experiments:
-	1. Tried to get blue signatures to appear clearer, but it seems any blue signature I pass in, unless it has been created in paint appears gray.
-	Green signatures dont seem to work very well.
+	1. Tried to isolate the signature through cropping and morphology, but the result of this application is all I could manage.
 	
-	Any signatures I try off the interent dont work as well as they should, I get a 50/50 working ration on the ones I picked.
-	
-	2. Sucessfully implemented a version which placed the image onto a signed form, the issue was that it was not to scale and would appear squashed.
-	This was done by cropping the signature which can be found below, rezising the form and combinging the ROI for the signature and the form.
-	
-	After completing this however it was revealed that it is not the objective of the assignment so I reverted to a simpler version.
-	Link to the git version with the code.
-	https://github.com/MichaelKane428/ImageProcessing/commit/736ac1edc6fc626ce3d79d24015580cb994fc487#diff-be144f71162553069eb09260442b8921
-	
+	2. Tried taking the result of the program and applying an adaptive threshold. 
+	My idea was to isolate the pixels further but it didnt really have any effect on the image.
 	
 	References: 
 	Convert References to harvard style.
@@ -86,16 +86,17 @@ class forgery():
 		return:
 			None
 		"""
-		
-		#Opening an image from a file:
-		print("Please Select a Signature you wish to forge:")
-		#file = easygui.fileopenbox()
-		image = cv2.imread("Trump.jpg")
-		forged_image = self.forgeSignature(image)
-
+		try:
+			#Opening an image from a file:
+			print("Please Select a Signature you wish to forge:")
+			file = easygui.fileopenbox()
+			image = cv2.imread(file)
+			forged_image = self.forgeSignature(image)
+		except:
+			print("User failed to select an image.")
 		while True:
 			# Showing an image on the screen (OpenCV):
-			cv2.imshow("boss", forged_image)
+			cv2.imshow("Trump Signature", forged_image)
 			key = cv2.waitKey(0)
 
 			# if the 'q' key is pressed, quit:
@@ -117,26 +118,40 @@ class forgery():
 			The return value (numpy.ndarray): This will return a forged version of the original signature.
 		"""
 		
-		# Create a grayscale mask for the signature. 
+		# Create a grayscale mask for the signature, then use morphology to isolate part of the signature. 
 		grayScale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-		threshold = cv2.threshold(grayScale, 218, 255, cv2.THRESH_BINARY)[1]
+		grayScaleHistogram = cv2.equalizeHist(grayScale)
+		threshold = cv2.threshold(grayScaleHistogram, 218, 255, cv2.THRESH_BINARY)[1]
 		threshold = cv2.bitwise_not(threshold)
-		# The next six lines of code are from reference Number 1.
-		# Crop the area where the signature is located. 
-		points = np.argwhere(threshold==0)
-		points = np.fliplr(points)
-		x, y, width, height = cv2.boundingRect(points)
-		x, y, width, height = x, y, width, height
-		croppedColorImage = image[y:y+height,x:x+width]
-		croppedGrayScaleImage = grayScale[y:y+height,x:x+width]
 		
-		# Extracted signature.
+		shape = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(40,50))
+		openMask = cv2.morphologyEx(threshold,cv2.MORPH_OPEN,shape)
+		closedMask = cv2.morphologyEx(openMask,cv2.MORPH_CLOSE,shape)
+		
+		# Call the cropImage function.
+		croppedColorImage, croppedGrayScaleImage = self.cropImage(closedMask, image)
+		
+		# Retrieve a coloured image of the newly cropped area.
 		reverseSignature = cv2.bitwise_not(croppedGrayScaleImage)
 		regionOfInterestOne = cv2.bitwise_and(croppedColorImage,croppedColorImage,mask=reverseSignature)
 		
+		# Retrieve a grayScaleMask of the newly cropped area.
+		grayScale = cv2.cvtColor(regionOfInterestOne, cv2.COLOR_BGR2GRAY)
+		grayScaleMask = cv2.adaptiveThreshold(grayScale, maxValue = 255,
+		adaptiveMethod = cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+		thresholdType = cv2.THRESH_BINARY,
+		blockSize = 11,C = 20)
+		
+		# Attempting to isolate the signature further.
+		shape = cv2.getStructuringElement(cv2.MORPH_RECT,(80,80))
+		openMask = cv2.morphologyEx(grayScaleMask,cv2.MORPH_OPEN,shape)
+		closedMask = cv2.morphologyEx(openMask,cv2.MORPH_CLOSE,shape)
+		closedMask = cv2.bitwise_not(closedMask)
+		regionOfInterestOne = cv2.bitwise_and(croppedColorImage,croppedColorImage,mask=closedMask)
+		
 		# Line 101 and 102 are referenced by reference Number 2.
 		# Apply the extracted Signature to the background.
-		reverseBackground = cv2.bitwise_not(reverseSignature)
+		reverseBackground = cv2.bitwise_not(closedMask)
 		height, width = croppedGrayScaleImage.shape
 		background = np.zeros((height, width, 3), np.uint8)
 		background[:] = (255,255,255)
@@ -145,8 +160,33 @@ class forgery():
 		
 		# Create an image of the signature.
 		cv2.imwrite('forgedSignature.jpg', forged_signature)
-		return threshold
-
+		return forged_signature
+		
+	def cropImage(self, mask, colorImage):
+		"""
+		Purpose of function:
+		The purpose of this function is to crop the grayscale and colored images which have been passed into the function.
+		
+		Example Function:
+		variable = self.cropImage(param1, param2)
+		
+		Args:
+			param1 (numpy.ndarray): This is the first paramter. Which is a gryscale mask for the colored Image.
+			param2 (numpy.ndarray): This is the first paramter. Which is the original colored Image.
+		return:
+			param1 (numpy.ndarray): This will return a cropped version of the grayscale mask.
+			param2 (numpy.ndarray): This will return a cropped version of the original colored image.
+		"""
+		# The next six lines of code are from reference Number 1.
+		# Crop the area where the signature is located. 
+		points = np.argwhere(mask==0)
+		points = np.fliplr(points)
+		x, y, width, height = cv2.boundingRect(points)
+		x, y, width, height = x, y, width, height
+		croppedColorImage = colorImage[y:y+height,x:x+width]
+		croppedGrayScaleImage = mask[y:y+height,x:x+width]
+		return croppedColorImage, croppedGrayScaleImage
+		
 if __name__ == "__main__":
 	forged_signature = forgery()
 	forged_signature.getImage()

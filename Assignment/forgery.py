@@ -16,7 +16,7 @@
 	Step-by-step:
 	1. Open a signature of your choice.
 	2. Convert the image to its grayscale version.
-	3. Find the area where the signature is located using np.argwhere(grayScaleMask==0). 
+	3. Find the area where the signature is located using np.argwhere(grayScaleMask==0). This selects the black pixels in the image.
 	4. Plot the points of the returned value of np.argwhere using points = np.fliplr(points) then x, y, width, height = cv2.boundingRect(points)
 	5. Crop both the grayscale and original image.
 	6. Get the ROI of the original image by getting the reverse mask of it then anding itwith itself.
@@ -86,16 +86,17 @@ class forgery():
 		return:
 			None
 		"""
-		
-		#Opening an image from a file:
-		print("Please Select a Signature you wish to forge:")
-		file = easygui.fileopenbox()
-		image = cv2.imread(file)
-		forged_image = self.forgeSignature(image)
-
+		try:
+			#Opening an image from a file:
+			print("Please Select a Signature you wish to forge:")
+			file = easygui.fileopenbox()
+			image = cv2.imread(file)
+			forged_image = self.forgeSignature(image)
+		except:
+			print("User failed to select an image.")
 		while True:
 			# Showing an image on the screen (OpenCV):
-			cv2.imshow("boss", forged_image)
+			cv2.imshow("Signature", forged_image)
 			key = cv2.waitKey(0)
 
 			# if the 'q' key is pressed, quit:

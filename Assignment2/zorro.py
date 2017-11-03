@@ -77,9 +77,9 @@ class zorro():
 
 			while(video.isOpened()):
 				ret, frame = video.read()
-				grayScale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-				cleanedFrame = self.cleanFrame(grayScale)
-				cleanedVideo.write(cleanedFrame)
+				#grayScale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+				#cleanedFrame = self.cleanFrame(grayScale)
+				cleanedVideo.write(frame)
 				cv2.imshow('frame',frame)
 				if cv2.waitKey(1) & 0xFF == ord('q'):
 					break

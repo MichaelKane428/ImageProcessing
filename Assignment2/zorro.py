@@ -5,7 +5,7 @@
 	Student No: C14402048
 	Course: DT211C
 	Date: 02/11/2017
-
+	GitHub: https://github.com/MichaelKane428/ImageProcessing/tree/master/Assignment2
 	Title: Assignment 2 Zorro
 
 	Introduction:
@@ -13,6 +13,34 @@
 	the distorted background
 	
 	Step-by-step:
+	1. set the frames you wish to clean using:
+	firstFrame = 300
+	lastFrame = 309
+	
+	2. capture the video using video = cv2.VideoCapture('Zorro.mp4').
+	
+	3. Prepare a new video to write your frames to. Fourcc defines the codec to use for windows I used XVID, but mac would need MP4
+	The new video needs to have the same width and height as the original so we grab them using video.get. 
+	Finally the videowriter object is created.
+	
+	fourcc = cv2.VideoWriter_fourcc(*'XVID')
+	height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+	width  = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+	cleanedVideo = cv2.VideoWriter('CleanedZorro.avi',fourcc, 20.0, (width,height))
+	
+	4. Loop through and wait for the frames to show up using a counter with the frames selected.
+	if counter >= firstFrame and counter < lastFrame:
+	
+	In this codintional statment call the cleanFrame function then write the returned frame to the new video object.
+	
+	5. Inside the cleanFrame function use fastnldenoise and medianblur to clean up the image.
+	Once the image is cleaned write the frame to an image file.
+	
+	fastDenoise = cv2.fastNlMeansDenoising(frame,None,10,7,21)
+	medianBlurFrame = cv2.medianBlur(frame, 11)
+	cv2.imwrite('frame_' + str(counter) + '.jpg', medianBlurFrame)
+	
+	6. Release both videos e.g. video.release(), and destroy all windows once the application has finished.
 	
 	Give an overview:
 	My first attempt at this application involved the entire video. I found it difficult to get results as
@@ -48,7 +76,8 @@
 	7.kernel = np.ones((10,10),np.float32)/25
 	  cleanedFrame = cv2.blur(frame,(10,10))
 	
-	8. denoisedFrame = cv2.fastNlMeansDenoising(frame,None,10,7,21)
+	8. This code produced Black frames with sme detail in grey. 
+	denoisedFrame = cv2.fastNlMeansDenoising(frame,None,10,7,21)
 	cleanedFrame = cv2.subtract(denoisedFrame ,frame)
 	cleanedFrame2 = cv2.add(cleanedFrame, frame)
 
@@ -63,24 +92,38 @@
 		erosion = cv2.erode(grayScaleMask,shape)
 		regionOfInterestOne = cv2.bitwise_and(frame,frame,mask=erosion)
 	
-	References: 
+	References:
 	//Displaying the video.
-	https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_gui/py_video_display/py_video_display.html
+	1. Docs OpenCV, DO. (2017)Getting Started with Videos.
+	Available at: https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_gui/py_video_display/py_video_display.html (10/11/2017)
+	
 	//fastdenoise
-	https://docs.opencv.org/3.2.0/d1/d79/group__photo__denoise.html#ga76abf348c234cecd0faf3c42ef3dc715
-	https://docs.opencv.org/3.2.0/d5/d69/tutorial_py_non_local_means.html
+	2. Docs OpenCV, DO. (2017)Denoising Computational Photography.
+	Available at: https://docs.opencv.org/3.2.0/d1/d79/group__photo__denoise.html#ga76abf348c234cecd0faf3c42ef3dc715 (10/11/2017)
+	
+	3. Docs OpenCV, DO. (2017)Image Denoising.
+	Available at: https://docs.opencv.org/3.2.0/d5/d69/tutorial_py_non_local_means.html (10/11/2017)
 	
 	//bilateralFilter, gausianblur, 2dfilter
-	https://docs.opencv.org/3.1.0/d4/d13/tutorial_py_filtering.html
-	http://answers.opencv.org/question/1451/smoothing-image-better-way-of-doing-that/
+	4. Docs OpenCV, DO. (2017)Smoothing Images.
+	Available at: https://docs.opencv.org/3.1.0/d4/d13/tutorial_py_filtering.html (10/11/2017)
+	
+	5. Answers OpenCV, AO. (2017)Smoothing image-better way of doing that.
+	Available at: http://answers.opencv.org/question/1451/smoothing-image-better-way-of-doing-that/ (10/11/2017)
 	
 	//median blur
-	https://docs.opencv.org/2.4/modules/imgproc/doc/filtering.html?highlight=median#cv2.medianBlur
-	https://stackoverflow.com/questions/18427031/median-filter-with-python-and-opencv
+	6. Docs OpenCV, DO. (2017) Image Filtering.
+	Available at: https://docs.opencv.org/2.4/modules/imgproc/doc/filtering.html?highlight=median#cv2.medianBlur (10/11/2017)
+	
+	7. Stack Overflow, SO. (2017) Median Filter with Python and OpenCV.
+	Available at: https://stackoverflow.com/questions/18427031/median-filter-with-python-and-opencv (10/11/2017)
 	
 	//Writing a video
-	https://stackoverflow.com/questions/32468371/video-capture-propid-parameters-in-opencv
-	https://docs.opencv.org/3.3.0/dd/d43/tutorial_py_video_display.html
+	8. Stack Overflow, SO. (2017) Video capture PROPID parameters in openCV.
+	Available at: https://stackoverflow.com/questions/32468371/video-capture-propid-parameters-in-opencv (10/11/2017)
+	
+	9. Docs OpenCV, DO. (2017) Getting Started with Videos.
+	Available at: https://docs.opencv.org/3.3.0/dd/d43/tutorial_py_video_display.html (10/11/2017)
 	
 	
 """
@@ -132,12 +175,14 @@ class zorro():
 		else:
 			print("Please wait for the Program to finish.")
 			print("You will find your ten images, and a video of the cleaned frames\nin the folder with this file.")
+			print("NOTE: The average time to run this file is 3 minutes.")
 			# Prepare the extension for the cleaned video.
 			fourcc = cv2.VideoWriter_fourcc(*'XVID')
 			height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 			width  = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
 			cleanedVideo = cv2.VideoWriter('CleanedZorro.avi',fourcc, 20.0, (width,height))
-				
+			
+			# Clean the frame and write to a video.
 			while(video.isOpened()):
 				ret, frame = video.read()
 				if counter >= firstFrame and counter < lastFrame: 
@@ -152,12 +197,25 @@ class zorro():
 			cleanedVideo.release()
 			cv2.destroyAllWindows()
 	
-	# Please check the experiments section. It shows the different algorithms I tried 
+	# Please check the experiments section. It shows the different algorithms I tried.
 	def cleanFrame(self, frame, counter):
+		"""
+		Purpose of function:
+		Clean the frame and write it as a new image.
+		
+		Example Function:
+		self.cleanFrame(arg1, arg2)
+		
+		Args:
+			frame: image from the video.
+			counter: an integer value denoting the current frame.
+		return:
+			cleanedFrame: Cleaned image.
+		"""
 		fastDenoise = cv2.fastNlMeansDenoising(frame,None,10,7,21)
-		medianBlurFrame = cv2.medianBlur(frame, 11)
-		cv2.imwrite('frame_' + str(counter) + '.jpg', medianBlurFrame)
-		return medianBlurFrame
+		cleanedFrame = cv2.medianBlur(frame, 11) 
+		cv2.imwrite('frame_' + str(counter) + '.jpg', cleanedFrame)
+		return cleanedFrame
 
 if __name__ == "__main__":
 	cleaned_video = zorro()

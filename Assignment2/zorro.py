@@ -6,37 +6,54 @@
 	Course: DT211C
 	Date: 02/11/2017
 
-	Title: 
+	Title: Assignment 2 Zorro
 
 	Introduction:
+	The goal of this application is to clean the zorro video, by removing the white noise and
+	the distorted background
 	
 	Step-by-step:
 	
 	Give an overview:
+	My first attempt at this application involved the entire video. I found it difficult to get results as
+	the algorithms would take up to an our to run. Example the fastNlMeansDenoising algorithm.
+	Github version for this attempt below.
+	https://github.com/MichaelKane428/ImageProcessing/commit/dbb58b21f6d95cbc3852840a83af63bcf40e7108#diff-f36d187bd5953849a16b16b5401342a8
+	
+	The second attempt which can be seen below uses the fastNlMeansDenoising algorithm, 
+	and it takes about 3 minutes for the application to run on ten frames.
+	The output is no where near what was desired.
+	I did try alot of experiments for both attempts, but I felt I lacked an understanding of the algorithms
+	even with the documentation to help me.
 	
 	Comment on experiments:
-	1. I attempted to use the following code to clean up the image.
-	CleanedFrame = cv2.fastNlMeansDenoising(frame,None,10,7,21)
-	The issues I was having was with the final argument(21). The higher this was the longer it took to process a single frame.
-	It was taking upwards of ten minutes to generate anything. The final product of waiting 30 minutes was a video file that didnt work.
-	//Remove this comment when I have tried it on the college pcs. 
+	1.  I attempted to use the following code to clean up the image.
+		CleanedFrame = cv2.fastNlMeansDenoising(frame,None,10,7,21)
+		The issues I was having was with the final argument(21). The higher this was the longer it took to process a single frame.
+		It was taking upwards of one hour to generate anything.
+		
+	2. The purpose of attempts 2-4 was to blur the image and reduce the noise. (unsuccessful)
+	frameKernel = np.array([[1,4,1], [4,7,4], [1,4,1]],dtype=float)
+	CleanedFrame = cv2.filter2D(frame,ddepth=-1,kernel=frameKernel)
 	
-	2. 	Tried all these different types of kernals to removce noise. After working with them for a while. I belive I have,
-		a complete misunderstanding about how they work. 
-		They just blurred the image and didint reduce the noise, It made the frames alot worse.
-		1.frameKernel = np.array([[1,4,1], [4,7,4], [1,4,1]],dtype=float)
-		  CleanedFrame = cv2.filter2D(frame,ddepth=-1,kernel=frameKernel)
-		
-		2.CleanedFrame = cv2.bilateralFilter(frame,9,75,75)
-		
-		3.CleanedFrame = cv2.GaussianBlur(frame,(5,5),0)
-		
-		4.kernel = np.ones((10,10),np.float32)/100
-		
-		5.CleanedFrame = cv2.filter2D(frame,-1,kernel)
-		  CleanedFrame = cv2.blur(frame,(2,2))
+	3.CleanedFrame = cv2.bilateralFilter(frame,9,75,75)
 	
-	3.  Eroding the image was interesting..........
+	4.CleanedFrame = cv2.GaussianBlur(frame,(5,5),0)
+	
+	5.kernel = np.ones((10,10),np.float32)/100
+	
+	6.CleanedFrame = cv2.filter2D(frame,-1,kernel)
+	  CleanedFrame = cv2.blur(frame,(2,2))
+	
+	7.kernel = np.ones((10,10),np.float32)/25
+	  cleanedFrame = cv2.blur(frame,(10,10))
+	
+	8. denoisedFrame = cv2.fastNlMeansDenoising(frame,None,10,7,21)
+	cleanedFrame = cv2.subtract(denoisedFrame ,frame)
+	cleanedFrame2 = cv2.add(cleanedFrame, frame)
+
+		
+	9.  This code produced black holes in the image:
 		grayScale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		grayScaleMask = cv2.adaptiveThreshold(grayScale, maxValue = 255,
 		adaptiveMethod = cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
@@ -49,14 +66,19 @@
 	References: 
 	//Displaying the video.
 	https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_gui/py_video_display/py_video_display.html
+	//fastdenoise
 	https://docs.opencv.org/3.2.0/d1/d79/group__photo__denoise.html#ga76abf348c234cecd0faf3c42ef3dc715
 	https://docs.opencv.org/3.2.0/d5/d69/tutorial_py_non_local_means.html
 	
-	//Noise reduction/bluring
+	//bilateralFilter, gausianblur, 2dfilter
 	https://docs.opencv.org/3.1.0/d4/d13/tutorial_py_filtering.html
 	http://answers.opencv.org/question/1451/smoothing-image-better-way-of-doing-that/
 	
-	//These two go together
+	//median blur
+	https://docs.opencv.org/2.4/modules/imgproc/doc/filtering.html?highlight=median#cv2.medianBlur
+	https://stackoverflow.com/questions/18427031/median-filter-with-python-and-opencv
+	
+	//Writing a video
 	https://stackoverflow.com/questions/32468371/video-capture-propid-parameters-in-opencv
 	https://docs.opencv.org/3.3.0/dd/d43/tutorial_py_video_display.html
 	
@@ -98,37 +120,44 @@ class zorro():
 		return:
 			None
 		"""
-		
+		#Saw Jane do this in class great idea for getting the frames.
+		firstFrame = 300
+		lastFrame = 309
+		counter = 0
 		video = cv2.VideoCapture('Zorro.mp4')
+		
 		if(video.isOpened() == False):
 			print("There was an error trying to open your file.")
 			print("Please check that the file name is correct, and that the file is in the correct directory.")
 		else:
+			print("Please wait for the Program to finish.")
+			print("You will find your ten images, and a video of the cleaned frames\nin the folder with this file.")
+			# Prepare the extension for the cleaned video.
 			fourcc = cv2.VideoWriter_fourcc(*'XVID')
 			height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 			width  = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
 			cleanedVideo = cv2.VideoWriter('CleanedZorro.avi',fourcc, 20.0, (width,height))
+				
 			while(video.isOpened()):
 				ret, frame = video.read()
-				cleanedFrame = self.cleanFrame(frame)
-				cleanedVideo.write(cleanedFrame)
-				cv2.imshow('frame',cleanedFrame)
-				if cv2.waitKey(25) & 0xFF == ord('q'):
-					break
+				if counter >= firstFrame and counter < lastFrame: 
+					cleanedFrames = self.cleanFrame(frame, counter)
+					cleanedVideo.write(cleanedFrames)
+				elif counter == lastFrame:
+					cleanedFrames = self.cleanFrame(frame, counter)
+					cleanedVideo.write(cleanedFrames)
+					video.release()
+				counter += 1	
 			video.release()
 			cleanedVideo.release()
 			cv2.destroyAllWindows()
-		
-	def cleanFrame(self, frame):
-		grayScale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-		grayScaleMask = cv2.adaptiveThreshold(grayScale, maxValue = 255,
-		adaptiveMethod = cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-		thresholdType = cv2.THRESH_BINARY,
-		blockSize = 5,C = 10)
-		shape = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(40,50))
-		erosion = cv2.erode(grayScaleMask,shape)
-		regionOfInterestOne = cv2.bitwise_and(frame,frame,mask=erosion)
-		return regionOfInterestOne
+	
+	# Please check the experiments section. It shows the different algorithms I tried 
+	def cleanFrame(self, frame, counter):
+		fastDenoise = cv2.fastNlMeansDenoising(frame,None,10,7,21)
+		medianBlurFrame = cv2.medianBlur(frame, 11)
+		cv2.imwrite('frame_' + str(counter) + '.jpg', medianBlurFrame)
+		return medianBlurFrame
 
 if __name__ == "__main__":
 	cleaned_video = zorro()

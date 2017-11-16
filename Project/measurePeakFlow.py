@@ -62,7 +62,7 @@ class measurePeakFlow():
 		return I
 
 	def find_yellow(self,I):
-		RangeLower = (0,90,100)
+		RangeLower = (0,75,75)
 		RangeUpper = (45,150,255)
 		B1 = cv2.inRange(I, RangeLower, RangeUpper)
 		

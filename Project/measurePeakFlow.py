@@ -44,6 +44,24 @@ class measurePeakFlow():
 		NEW = cv2.bitwise_and(I,I,mask=NewMask)
 		NewMask,contours,_ = cv2.findContours(NewMask,mode=cv2.RETR_EXTERNAL,method=cv2.CHAIN_APPROX_NONE)
 		
+		croppedImage = self.cropLargestContour(NEW, contours)
+		
+		croppedRed = self.find_red(croppedImage)
+		
+		ROI = self.cropROI(croppedImage, croppedRed)
+		
+		cv2.imshow("NEW", ROI)
+		key = cv2.waitKey(0)
+
+	def cropROI(self, croppedImage, croppedRed):
+		points = np.argwhere(croppedRed==255)
+		points = np.fliplr(points)
+		x, y, width, height = cv2.boundingRect(points)
+		x, y, width, height = x, y, width, height
+		croppedColorImage = croppedImage[y:y+height,x:x+width]
+		return croppedColorImage
+	
+	def cropLargestContour(self, NEW, contours):
 		#Code Taken from Source Number [3]
 		#Crop the largestContour.
 		areas = [cv2.contourArea(contour) for contour in contours]
@@ -51,12 +69,9 @@ class measurePeakFlow():
 		largestContour = contours[maxIndex]
 		x,y,width,height = cv2.boundingRect(largestContour)
 		croppedImage = NEW[y:y+height,x:x+width]
-		
-		cv2.imshow("NEW", croppedImage)
-		key = cv2.waitKey(0)
-		
+		return croppedImage
+	
 	def get_image(self):
-
 		f = easygui.fileopenbox()
 		I = cv2.imread(f)
 		return I

@@ -68,7 +68,7 @@ class peakFlow():
 		maxIndex = np.argmax(areas)
 		largestContour = contours[maxIndex]
 		x,y,width,height = cv2.boundingRect(largestContour)
-		croppedImage = alteredImage[y:y+height,x:x+width]
+		croppedImage = alteredImage[y:y+200,x:x+200]
 		return croppedImage
 	
 	def get_image(self):
